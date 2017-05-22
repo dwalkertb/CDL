@@ -45,8 +45,8 @@ print(u'分词完毕！分词结果已输出到desktop的wordseg_result.txt！' 
 
 # 过滤停用词
 stopwords = []
-st = codecs.open('C:\\Users\\TBin\\Desktop\\stopwords.txt', 'r+', encoding='utf-8')
-delstopwords_result = codecs.open('C:\\Users\\TBin\\Desktop\\Result\\delstopwords_result.txt', 'a', encoding='utf-8')
+st = codecs.open('../res/stopwords.txt', 'r+', encoding='utf-8')
+delstopwords_result = codecs.open('../tmp/delstopwords_result.txt', 'a', encoding='utf-8')
 
 for line in st:
     line = line.strip()
