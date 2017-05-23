@@ -1,4 +1,4 @@
-###CNLAB-协同推荐专家系统
+### CNLAB-协同推荐专家系统
 数据处理过程依据论文：**Collaborative Topic Modeling for Recommending Scientific Articles**
 
 _论文中相关描述：
