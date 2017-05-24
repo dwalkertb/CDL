@@ -34,8 +34,8 @@ for i in range(5):
     print(s)
     print('**********************************************')
 
-    for item in pynlpir.segment(s): # 分词
-        singleItemResult.append(item[0])
+    for it in pynlpir.segment(s): # 分词
+        singleItemResult.append(it[0])
 
     print('****************分词后结果******************')
     print(singleItemResult)
