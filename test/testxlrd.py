@@ -27,20 +27,21 @@ for i in range(2):
 print(item)
 print('以上链接后的结果**********************************')
 
-singletextResult = []
+singleItemResult = []
+allItemResult = []
 s = ""
-s1 = "".join(item).strip().encode('utf-8')
-
-s = re.sub("[\s+\.\!\/_,$%^*(+\"\']+|[+——！，。？?、~@#￥%……&*（）]+".decode('utf8'), "".decode('utf8'), s1)
+s1 = "".join(item).strip() #列表转换为串
+symbol = "[\s+\.\!\/_,$%^*(+\"\']+|[+——！，。？?、~@#￥%……&*（）]+" #正则表达式 删除标点符号
+s = re.sub(symbol, "", s1)
 
 print(s)
-print('以上为列表转换为字符串**********************************')
+print('以上为列表转换为字符串并且去掉了标点符号**********************************')
 
 # 分词
 for item in pynlpir.segment(s):
-    singletextResult.append(item[0])
-print(singletextResult)
-print(type(singletextResult))
+    singleItemResult.append(item[0])
+print(singleItemResult)
+print(type(singleItemResult))
 print('以上为分词后结果**********************************')
 
 # 去掉停用词
@@ -52,12 +53,14 @@ for line in sw:
     stopwords.append(line)  # 获得停用词列表
 
 deltstopwords = []
-for word in singletextResult:
+rowVec = ""
+for word in singleItemResult:
     word = word.strip()
     #print(word)
     if word not in stopwords:
-        #if word >= u'\u4e00' and word <= u'\u9fa5':  # 判断是否是汉字
-            deltstopwords.append(word)
-print(deltstopwords)
+        deltstopwords.append(word)
+
+rowVec = rowVec + " ".join(deltstopwords)
+print(rowVec)
 
 
