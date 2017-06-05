@@ -4,61 +4,80 @@
 #Version:python 3.6.1 
 #e_mail:dwalkertb@qq.com
 '''
-import xlrd
 import codecs
-import pynlpir
 import re
+from time import time
+
+import jieba
+import pynlpir
+import xlrd
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.feature_extraction.text import TfidfTransformer
+
+# 英文正则表达式
+engRe = r'[A-Za-z0-9]+'
+begin = time()
 pynlpir.open()
 
 allItemResult = []
-data = xlrd.open_workbook('../res/dataset.xlsx')
+data = xlrd.open_workbook('../res/datasetfortest.xlsx')
 table = data.sheets()[0]
 nrows = table.nrows
 item = []
-for i in range(5):
-    if i == 0:
-        continue
-    item.append(table.row_values(i)[2]+table.row_values(i)[4]) # 标题和摘要链接
+stopwords = []
+sw = codecs.open('../res/stopwords.txt', 'r+', encoding='utf-8')
 
-    print('****************标题和摘要链接******************')
-    print(item)
-    print('**********************************************')
-
-    singleItemResult = []
-    s = ""
-    s1 = "".join(item).strip() #列表转换为串
-    symbol = "[\s+\.\!\/_,$%^*(+\"\']+|[+——！，。？?、~@#￥%……&*（）]+" #正则表达式 删除标点符号
-    s = re.sub(symbol, "", s1)
-
-    print('****************列表转换为字符串并去掉标点符号******************')
-    print(s)
-    print('**********************************************')
-
-    for it in pynlpir.segment(s): # 分词
-        singleItemResult.append(it[0])
-
-    print('****************分词后结果******************')
-    print(singleItemResult)
-    print('**********************************************')
+for line in sw:
+    line = line.strip()
+    stopwords.append(line)  # 获得停用词列表
 
 
-    stopwords = []
-    sw = codecs.open('../res/stopwords.txt', 'r+', encoding='utf-8')
-    for line in sw:
-        line = line.strip()
-        stopwords.append(line)  # 获得停用词列表
-    deltstopwords = []
-    rowVec = ""
-    for word in singleItemResult:
-        word = word.strip()
-        if word not in stopwords: # 去掉停用词
-            deltstopwords.append(word)
-    rowVec = rowVec + " ".join(deltstopwords)
-    print('****************行向量******************')
-    print(rowVec)
-    print('**********************************************')
+class ReadData(object):
+    def __iter__(self):
+        for i in range(nrows):
+            if i == 0:
+                continue
+            r = table.row_values(i)[2] + table.row_values(i)[4]
+            yield r
+
+
+records = ReadData()
+count = 1
+for row in records:
+    # 去除英文
+    cleanedRow = re.sub(engRe, '', row)
+
+    # singleItemResult = [item[0] for item in pynlpir.segment(cleanedRow)]
+    singleItemResult = list(jieba.cut(cleanedRow, cut_all=False))
+    cleanedST = [word.strip() for word in singleItemResult if word not in stopwords]
+
+    rowVec = " ".join(cleanedST)
     allItemResult.append(rowVec)
+    count = count + 1
 
-print('****************每行结果作为列表元素存放在大列表******************')
-print(allItemResult)
-print('**********************************************')
+print('已完成数据预处理(数据清洗、分词等)！')
+
+end = time()
+
+# 保存分词后数据
+cleanedData = '\n'.join(allItemResult)
+open("../tmp/cleaneddataset.txt", "a", encoding='UTF-8').write(cleanedData)
+
+print("\n第一阶段共花费时间 %f 秒，共读取记录数: %d, 实际处理记录数：%d" % (end - begin, nrows, count))
+
+vectorizer = CountVectorizer(min_df=2)  # 该类会将文本中的词语转换为词频矩阵，矩阵元素a[i][j] 表示j词在i类文本下的词频
+transformer = TfidfTransformer()  # 该类会统计每个词语的tf-idf权值
+tfidf = transformer.fit_transform(
+    vectorizer.fit_transform(allItemResult))  # 第一个fit_transform是计算tf-idf，第二个fit_transform是将文本转为词频矩阵
+
+word = vectorizer.get_feature_names()  # 获取词袋模型中的所有词语
+weight = tfidf.toarray()  # 将tf-idf矩阵抽取出来，元素a[i][j]表示j词在i类文本中的tf-idf权重
+
+'''
+for i in range(len(weight)):  # 打印每类文本的tf-idf词语权重，第一个for遍历所有文本，第二个for便利某一类文本下的词语权重
+    print(u"-------这里输出第", i, u"类文本的词语tf-idf权重------")
+    for j in range(len(word)):
+        print(word[j], weight[i][j])
+
+print(tfidf)
+'''
